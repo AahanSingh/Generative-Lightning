@@ -14,13 +14,17 @@ class MonetDataset(Dataset):
     """Pytorch Dataset Subclass for the Monet Dataset
     """
 
-    def __init__(self, dataroot, transforms=None, shuffle_photos=False):
+    def __init__(self, dataroot, transforms=None, shuffle_photos=False, val=False, val_size=20):
         super().__init__()
+        self.val = val
         self.monets = glob.glob(dataroot + "monet_jpg/*.jpg")
         photos = glob.glob(dataroot + "photo_jpg/*.jpg")
         if shuffle_photos:
             random.shuffle(photos)
-        self.photos = photos[:len(self.monets)]
+        if not val:
+            self.photos = photos[:len(self.monets)]
+        else:
+            self.photos = photos[:val_size]
         self.transforms = transforms
 
     def __getitem__(self, idx):
@@ -29,6 +33,8 @@ class MonetDataset(Dataset):
         if self.transforms:
             monet = self.transforms(monet)
             photo = self.transforms(photo)
+        if self.val:
+            return photo
         return monet, photo
 
     def __len__(self):

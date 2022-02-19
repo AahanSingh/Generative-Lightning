@@ -1,8 +1,6 @@
-"""_summary_
-
-Returns:
-    _type_: _description_
+"""Contains model code for the CycleGAN
 """
+import numpy as np
 import torch
 from torch import nn
 import torch.utils.data
@@ -226,3 +224,19 @@ class CycleGAN(pl.LightningModule):
     def backward(self, loss, optimizer, optimizer_idx, *args, **kwargs) -> None:
         loss = loss.mean()
         loss.backward()
+
+    def training_step_end(self, losses):
+        self.log("train/monet_gen_loss", losses[0].mean(), prog_bar=True, on_step=True)
+        self.log("train/photo_gen_loss", losses[1].mean(), prog_bar=True, on_step=True)
+        self.log("train/monet_disc_loss", losses[2].mean(), prog_bar=True, on_step=True)
+        self.log("train/photo_disc_loss", losses[3].mean(), prog_bar=True, on_step=True)
+
+    """
+    def on_train_epoch_end(self, losses) -> None:
+        # total_monet_gen_loss, total_photo_gen_loss, monet_disc_loss, photo_disc_loss
+        self.log("train/monet_gen_loss", losses[0].mean(), prog_bar=True)
+        self.log("train/photo_gen_loss", losses[1].mean(), prog_bar=True)
+        self.log("train/monet_disc_loss", losses[2].mean(), prog_bar=True)
+        self.log("train/photo_disc_loss", losses[3].mean(), prog_bar=True)
+        return
+    """
