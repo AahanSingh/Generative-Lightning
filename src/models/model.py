@@ -1,24 +1,103 @@
+"""_summary_
+
+Returns:
+    _type_: _description_
+"""
 import torch
+from torch import nn
 import torch.utils.data
 import pytorch_lightning as pl
+from .losses import discriminator_loss, generator_loss, cycle_loss, identity_loss
+from .utils import downsample, upsample
 
-from .losses import *
+
+def weights_init(m):
+    """Initializes weights with a 0 mean and 0.02 stdev
+
+    Args:
+        m (torch.nn.Module): torch module whose weights will be initialized
+    """
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        nn.init.normal_(m.weight.data, 0.0, 0.02)
+
+
+class Generator(nn.Module):
+
+    def __init__(self):
+        super().__init__()
+        self.down_stack = nn.ModuleList([
+            downsample(in_channels=3, out_channels=64, kernel_size=2, apply_instancenorm=False),
+            downsample(in_channels=64, out_channels=128, kernel_size=2),
+            downsample(in_channels=128, out_channels=256, kernel_size=2),
+            downsample(in_channels=256, out_channels=512, kernel_size=2),
+            downsample(in_channels=512, out_channels=512, kernel_size=2),
+            downsample(in_channels=512, out_channels=512, kernel_size=2),
+            downsample(in_channels=512, out_channels=512, kernel_size=2),
+            downsample(in_channels=512, out_channels=512, kernel_size=2, apply_instancenorm=False),
+        ])
+        self.up_stack = nn.ModuleList([
+            upsample(in_channels=512, out_channels=512, kernel_size=2, apply_dropout=True),
+            upsample(in_channels=1024, out_channels=512, kernel_size=2, apply_dropout=True),
+            upsample(in_channels=1024, out_channels=512, kernel_size=2, apply_dropout=True),
+            upsample(in_channels=1024, out_channels=512, kernel_size=2),
+            upsample(in_channels=1024, out_channels=256, kernel_size=2),
+            upsample(in_channels=512, out_channels=128, kernel_size=2),
+            upsample(in_channels=256, out_channels=64, kernel_size=2)
+        ])
+        self.last = nn.Sequential(
+            nn.ConvTranspose2d(in_channels=128, out_channels=3, kernel_size=2, stride=2), nn.Tanh())
+
+    def forward(self, input):
+        # Downsampling through the model
+        x = input
+        skips = []
+        for down in self.down_stack:
+            x = down(x)
+            skips.append(x)
+        skips = reversed(skips[:-1])
+        # Upsampling and establishing the skip connections
+        for up, skip in zip(self.up_stack, skips):
+            x = up(x)
+            x = torch.cat((x, skip), dim=1)
+        x = self.last(x)
+        return x
+
+
+class Discriminator(nn.Module):
+
+    def __init__(self):
+        super().__init__()
+        self.layers = nn.Sequential(
+            downsample(in_channels=3, out_channels=64, kernel_size=2, apply_instancenorm=False),
+            downsample(in_channels=64, out_channels=128, kernel_size=2, apply_instancenorm=False),
+            downsample(in_channels=128, out_channels=256, kernel_size=2, apply_instancenorm=False),
+            nn.ZeroPad2d(1),
+            nn.Conv2d(in_channels=256, out_channels=512, kernel_size=4, stride=1, bias=False),
+            nn.InstanceNorm2d(num_features=512), nn.LeakyReLU(), nn.ZeroPad2d(1),
+            nn.Conv2d(in_channels=512, out_channels=1, kernel_size=4, stride=1))
+
+    def forward(self, input):
+        return self.layers(input)
 
 
 class CycleGAN(pl.LightningModule):
+    """Defines pytorch lightning model for a CycleGAN
+    """
+
     def __init__(
         self,
-        monet_generator,
-        photo_generator,
-        monet_discriminator,
-        photo_discriminator,
         lambda_cycle=10,
     ):
         super().__init__()
-        self.m_gen = monet_generator
-        self.p_gen = photo_generator
-        self.m_disc = monet_discriminator
-        self.p_disc = photo_discriminator
+        self.m_gen = nn.Sequential(Generator())
+        self.m_gen.apply(weights_init)
+        self.p_gen = nn.Sequential(Generator())
+        self.p_gen.apply(weights_init)
+        self.m_disc = nn.Sequential(Discriminator())
+        self.m_disc.apply(weights_init)
+        self.p_disc = nn.Sequential(Discriminator())
+        self.p_disc.apply(weights_init)
         self.lambda_cycle = lambda_cycle
         self.gen_loss_fn = generator_loss
         self.cycle_loss_fn = cycle_loss
@@ -30,19 +109,19 @@ class CycleGAN(pl.LightningModule):
         Initializes the optimizer and learning rate scheduler
         :return: output - Initialized optimizer and scheduler
         """
-        self.monet_generator_optimizer = torch.optim.Adam(
-            self.m_gen.parameters(), lr=2e-4, betas=(0.5, 0.999)
-        )
-        self.photo_generator_optimizer = torch.optim.Adam(
-            self.p_gen.parameters(), lr=2e-4, betas=(0.5, 0.999)
-        )
+        self.monet_generator_optimizer = torch.optim.Adam(self.m_gen.parameters(),
+                                                          lr=2e-4,
+                                                          betas=(0.5, 0.999))
+        self.photo_generator_optimizer = torch.optim.Adam(self.p_gen.parameters(),
+                                                          lr=2e-4,
+                                                          betas=(0.5, 0.999))
 
-        self.monet_discriminator_optimizer = torch.optim.Adam(
-            self.m_disc.parameters(), lr=2e-4, betas=(0.5, 0.999)
-        )
-        self.photo_discriminator_optimizer = torch.optim.Adam(
-            self.p_disc.parameters(), lr=2e-4, betas=(0.5, 0.999)
-        )
+        self.monet_discriminator_optimizer = torch.optim.Adam(self.m_disc.parameters(),
+                                                              lr=2e-4,
+                                                              betas=(0.5, 0.999))
+        self.photo_discriminator_optimizer = torch.optim.Adam(self.p_disc.parameters(),
+                                                              lr=2e-4,
+                                                              betas=(0.5, 0.999))
 
         return [
             self.monet_generator_optimizer,
@@ -55,52 +134,46 @@ class CycleGAN(pl.LightningModule):
         real_monet, real_photo = train_batch
         if optimizer_idx == 0:
             cycled_photo, cycled_monet, disc_fake_monet, same_monet = self.forward(
-                real_monet, real_photo, idx=optimizer_idx
-            )
+                real_monet, real_photo, idx=optimizer_idx)
             # evaluates total cycle consistency loss
-            total_cycle_loss = self.cycle_loss_fn(
-                real_monet, cycled_monet, self.lambda_cycle
-            ) + self.cycle_loss_fn(real_photo, cycled_photo, self.lambda_cycle)
+            total_cycle_loss = self.cycle_loss_fn(real_monet, cycled_monet,
+                                                  self.lambda_cycle) + self.cycle_loss_fn(
+                                                      real_photo, cycled_photo, self.lambda_cycle)
             # evaluates generator loss
             monet_gen_loss = self.gen_loss_fn(disc_fake_monet)
             # evaluates total generator loss
             total_monet_gen_loss = (
-                monet_gen_loss
-                + total_cycle_loss
-                + self.identity_loss_fn(real_monet, same_monet, self.lambda_cycle)
-            )
+                monet_gen_loss + total_cycle_loss +
+                self.identity_loss_fn(real_monet, same_monet, self.lambda_cycle))
             return total_monet_gen_loss
 
         if optimizer_idx == 1:
             cycled_photo, cycled_monet, disc_fake_photo, same_photo = self.forward(
-                real_monet, real_photo, idx=optimizer_idx
-            )
+                real_monet, real_photo, idx=optimizer_idx)
             # evaluates total cycle consistency loss
-            total_cycle_loss = self.cycle_loss_fn(
-                real_monet, cycled_monet, self.lambda_cycle
-            ) + self.cycle_loss_fn(real_photo, cycled_photo, self.lambda_cycle)
+            total_cycle_loss = self.cycle_loss_fn(real_monet, cycled_monet,
+                                                  self.lambda_cycle) + self.cycle_loss_fn(
+                                                      real_photo, cycled_photo, self.lambda_cycle)
             # evaluates generator loss
             photo_gen_loss = self.gen_loss_fn(disc_fake_photo)
             # evaluates total generator loss
             total_photo_gen_loss = (
-                photo_gen_loss
-                + total_cycle_loss
-                + self.identity_loss_fn(real_photo, same_photo, self.lambda_cycle)
-            )
+                photo_gen_loss + total_cycle_loss +
+                self.identity_loss_fn(real_photo, same_photo, self.lambda_cycle))
             return total_photo_gen_loss
 
         if optimizer_idx == 2:
-            disc_fake_monet, disc_real_monet = self.forward(
-                real_monet, real_photo, idx=optimizer_idx
-            )
+            disc_fake_monet, disc_real_monet = self.forward(real_monet,
+                                                            real_photo,
+                                                            idx=optimizer_idx)
             # evaluates discriminator loss
             monet_disc_loss = self.disc_loss_fn(disc_real_monet, disc_fake_monet)
             return monet_disc_loss
 
         if optimizer_idx == 3:
-            disc_fake_photo, disc_real_photo = self.forward(
-                real_monet, real_photo, idx=optimizer_idx
-            )
+            disc_fake_photo, disc_real_photo = self.forward(real_monet,
+                                                            real_photo,
+                                                            idx=optimizer_idx)
             # evaluates discriminator loss
             photo_disc_loss = self.disc_loss_fn(disc_real_photo, disc_fake_photo)
             return photo_disc_loss
@@ -151,4 +224,5 @@ class CycleGAN(pl.LightningModule):
             return disc_fake_photo, disc_real_photo
 
     def backward(self, loss, optimizer, optimizer_idx, *args, **kwargs) -> None:
+        loss = loss.mean()
         loss.backward()

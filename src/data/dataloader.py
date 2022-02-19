@@ -13,6 +13,7 @@ import torchvision.io
 class MonetDataset(Dataset):
     """Pytorch Dataset Subclass for the Monet Dataset
     """
+
     def __init__(self, dataroot, transforms=None, shuffle_photos=False):
         super().__init__()
         self.monets = glob.glob(dataroot + "monet_jpg/*.jpg")
@@ -23,8 +24,8 @@ class MonetDataset(Dataset):
         self.transforms = transforms
 
     def __getitem__(self, idx):
-        monet = torchvision.io.read_image(self.monets[idx]).to(torch.float)
-        photo = torchvision.io.read_image(self.photos[idx]).to(torch.float)
+        monet = torchvision.io.read_image(self.monets[idx]).float()
+        photo = torchvision.io.read_image(self.photos[idx]).float()
         if self.transforms:
             monet = self.transforms(monet)
             photo = self.transforms(photo)
