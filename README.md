@@ -53,5 +53,7 @@ Project Organization
 
 
 --------
+### The diagram below shows the flow of data from inputs to losses in the Monet CycleGAN experiment.
+![Cycle GAN Data Flow](https://github.com/AahanSingh/gan/blob/main/reports/figures/Monet%20CycleGAN.png)
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
