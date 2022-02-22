@@ -53,7 +53,9 @@ Project Organization
 
 
 --------
-### The diagram below shows the flow of data from inputs to losses in the Monet CycleGAN experiment.
+# Monet 
+The dataset used in this repo is from the Kaggle Competition [I’m Something of a Painter Myself](https://www.kaggle.com/c/gan-getting-started/overview). The challenge is to train a GAN to generate realistic looking Monets from photographs. The dataset contains 300 images of Monets and 7038 image of real life photographs. The dataset contains square RGB images of dimension 256. 
+The first set of experiments are inspired by [Amy Jang's Notebook](https://www.kaggle.com/amyjang/monet-cyclegan-tutorial). While Amy's tutorial uses tfrecords and keras to create and train the CycleGAN, my aim was to try and replicate that using [Pytorch Lightning](https://www.pytorchlightning.ai/). In order to userstand the flow of data through the network, ultimately ending in the calculation of the losses, I created the diagram below. While it may look complex, the idea is quite simple when broken down into smaller steps. 
 ![Cycle GAN Data Flow](https://github.com/AahanSingh/gan/blob/main/reports/figures/Monet%20CycleGAN.png)
 
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
