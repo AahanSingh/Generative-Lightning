@@ -15,12 +15,9 @@ def discriminator_loss(real, generated):
     Returns:
         torch.Tensor: Total Discriminator loss
     """
-    real_loss = F.binary_cross_entropy_with_logits(input=real,
-                                                   target=torch.ones_like(real),
-                                                   reduction="none")
+    real_loss = F.binary_cross_entropy_with_logits(input=real, target=torch.ones_like(real))
     generated_loss = F.binary_cross_entropy_with_logits(input=generated,
-                                                        target=torch.zeros_like(generated),
-                                                        reduction="none")
+                                                        target=torch.zeros_like(generated))
     total_disc_loss = real_loss + generated_loss
     return total_disc_loss * 0.5
 
@@ -34,9 +31,7 @@ def generator_loss(generated):
     Returns:
         torch.Tensor: BCE with Logits applied to Generator output and a target of all ones.
     """
-    return F.binary_cross_entropy_with_logits(input=generated,
-                                              target=torch.ones_like(generated),
-                                              reduction="none")
+    return F.binary_cross_entropy_with_logits(input=generated, target=torch.ones_like(generated))
 
 
 def cycle_loss(real_image, cycled_image, LAMBDA):
@@ -50,7 +45,7 @@ def cycle_loss(real_image, cycled_image, LAMBDA):
     Returns:
         torch.Tensor: Cycle Loss
     """
-    loss = torch.mean(torch.abs(real_image - cycled_image))
+    loss = F.l1_loss(input=cycled_image, target=real_image)
     return LAMBDA * loss
 
 
@@ -66,5 +61,5 @@ def identity_loss(real_image, same_image, LAMBDA):
     Returns:
         torch.Tensor: Idenitity Loss
     """
-    loss = torch.mean(torch.abs(real_image - same_image))
+    loss = F.l1_loss(input=same_image, target=real_image)
     return LAMBDA * 0.5 * loss
