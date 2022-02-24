@@ -58,4 +58,7 @@ The dataset used in this repo is from the Kaggle Competition [I’m Something of
 The first set of experiments are inspired by [Amy Jang's Notebook](https://www.kaggle.com/amyjang/monet-cyclegan-tutorial). While Amy's tutorial uses tfrecords and keras to create and train the CycleGAN, my aim was to try and replicate that using [Pytorch Lightning](https://www.pytorchlightning.ai/). In order to userstand the flow of data through the network, ultimately ending in the calculation of the losses, I created the diagram below. While it may look complex, the idea is quite simple when broken down into smaller steps. 
 ![Cycle GAN Data Flow](https://github.com/AahanSingh/gan/blob/main/reports/figures/Monet%20CycleGAN.png)
 
+## Instructions:
+- To run training: `python train_model.py --gpus 1 --data-path data/raw/ --bs 128 --log_every_n_steps 10`
+
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
