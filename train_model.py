@@ -10,7 +10,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 #from src.visualization.callbacks import WandbImageCallback
 
-from src.models.model import CycleGAN
+from src.models.cycle_gan import CycleGAN
 from src.data.dataloader import MonetDataset
 
 # Set random seed for reproducibility
