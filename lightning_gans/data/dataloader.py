@@ -3,9 +3,6 @@ This modules contains all of the pytorch datasets used in the project.
 """
 import glob
 import random
-import torch
-import torch.nn.parallel
-import torch.utils.data
 from torch.utils.data import Dataset
 import torchvision.io
 
