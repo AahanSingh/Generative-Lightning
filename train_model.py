@@ -28,7 +28,7 @@ def main(args):
     # Number of workers for dataloader
     workers = 12
     # Batch size during training
-    batch_size = 12
+    batch_size = args.bs
     # Spatial size of training images. All images will be resized to this
     #   size using a transformer.
     image_size = 256
@@ -71,7 +71,7 @@ def main(args):
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("--data-path", metavar="FILE", default=None, required=True)
-    parser.add_argument("--bs", default=128)
+    parser.add_argument("--bs", default=128, type=int)
     parser.add_argument("--gen", required=True, type=str)
     parser.add_argument("--l", required=True, type=int)
     parser.add_argument("--k", required=True, type=int)
