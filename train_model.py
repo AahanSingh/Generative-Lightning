@@ -10,8 +10,9 @@ import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 #from src.visualization.callbacks import WandbImageCallback
 
-from src.models.cycle_gan import CycleGAN
-from src.data.dataloader import MonetDataset
+from lightning_gans.models.generators import UNETGenerator, WideResnetEncoderDecoder
+from lightning_gans.models.cycle_gan import CycleGAN
+from lightning_gans.data.dataloader import MonetDataset
 
 # Set random seed for reproducibility
 manualSeed = 999
@@ -57,7 +58,8 @@ def main(args):
                                                  batch_size=batch_size,
                                                  num_workers=workers)
     # Create the generator
-    model = CycleGAN()
+    generators = {"UNET": UNETGenerator, "Resnet": WideResnetEncoderDecoder}
+    model = CycleGAN(generator=generators[args.gen], l=args.l, k=args.k)
     wandb_logger = WandbLogger(project="Monet CycleGAN", log_model="all")
     wandb_logger.watch(model)
     trainer = pl.Trainer.from_argparse_args(
@@ -70,6 +72,9 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument("--data-path", metavar="FILE", default=None, required=True)
     parser.add_argument("--bs", default=128)
+    parser.add_argument("--gen", required=True, type=str)
+    parser.add_argument("--l", required=True, type=int)
+    parser.add_argument("--k", required=True, type=int)
     parser = pl.Trainer.add_argparse_args(parent_parser=parser)
     args = parser.parse_args()
     main(args)
