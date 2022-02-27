@@ -6,7 +6,6 @@ from torch import nn
 import torch.utils.data
 import pytorch_lightning as pl
 from .losses import discriminator_loss, generator_loss, cycle_loss, identity_loss
-from .generators import Generator
 from .discriminators import Discriminator
 
 
@@ -27,12 +26,14 @@ class CycleGAN(pl.LightningModule):
 
     def __init__(
         self,
+        generator,
         lambda_cycle=10,
+        **kwargs,
     ):
         super().__init__()
-        self.m_gen = nn.Sequential(Generator())
+        self.m_gen = nn.Sequential(generator(**kwargs))
         self.m_gen.apply(weights_init)
-        self.p_gen = nn.Sequential(Generator())
+        self.p_gen = nn.Sequential(generator(**kwargs))
         self.p_gen.apply(weights_init)
         self.m_disc = nn.Sequential(Discriminator())
         self.m_disc.apply(weights_init)
@@ -167,18 +168,14 @@ class CycleGAN(pl.LightningModule):
         loss = loss.mean()
         loss.backward()
 
-    def training_step_end(self, losses):
-        self.log("train/monet_gen_loss", losses[0].mean(), prog_bar=True, on_step=True)
-        self.log("train/photo_gen_loss", losses[1].mean(), prog_bar=True, on_step=True)
-        self.log("train/monet_disc_loss", losses[2].mean(), prog_bar=True, on_step=True)
-        self.log("train/photo_disc_loss", losses[3].mean(), prog_bar=True, on_step=True)
-
-    """
-    def on_train_epoch_end(self, losses) -> None:
+    def train_epoch_end(self, losses) -> None:
         # total_monet_gen_loss, total_photo_gen_loss, monet_disc_loss, photo_disc_loss
         self.log("train/monet_gen_loss", losses[0].mean(), prog_bar=True)
         self.log("train/photo_gen_loss", losses[1].mean(), prog_bar=True)
         self.log("train/monet_disc_loss", losses[2].mean(), prog_bar=True)
         self.log("train/photo_disc_loss", losses[3].mean(), prog_bar=True)
+        total_loss = 0
+        for loss in losses:
+            total_loss += loss.mean()
+        self.log("train/total_loss", total_loss, prog_bar=True)
         return
-    """
