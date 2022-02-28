@@ -1,16 +1,18 @@
 from argparse import ArgumentParser
 from asyncio.log import logger
+from distutils.command import check
 import random
 import torch
 import torch.nn.parallel
 import torch.utils.data
 import torchvision.transforms as transforms
 import pytorch_lightning as pl
-
+from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
 #from src.visualization.callbacks import WandbImageCallback
+import wandb
 
-from lightning_gans.models.generators import UNETGenerator, WideResnetEncoderDecoder
+from lightning_gans.models.generators import UNETGenerator, WideResnetEncoderDecoder, WideResnetUNET
 from lightning_gans.models.cycle_gan import CycleGAN
 from lightning_gans.data.dataloader import MonetDataset
 
@@ -58,12 +60,33 @@ def main(args):
                                                  batch_size=batch_size,
                                                  num_workers=workers)
     # Create the generator
-    generators = {"UNET": UNETGenerator, "Resnet": WideResnetEncoderDecoder}
+    generators = {
+        "UNET": UNETGenerator,
+        "Resnet": WideResnetEncoderDecoder,
+        "WideResnetUNET": WideResnetUNET
+    }
     model = CycleGAN(generator=generators[args.gen], l=args.l, k=args.k)
-    wandb_logger = WandbLogger(project="Monet CycleGAN", log_model="all")
+    exp_id = args.id
+    if not exp_id:
+        exp_id = wandb.util.generate_id()
+    wandb_logger = WandbLogger(project="Monet CycleGAN",
+                               log_model="all",
+                               save_dir="/home/aahan/KAGGLE_EXPERIMENTS/",
+                               name="{}_{}_{}_noAug".format(args.gen, args.l, args.k),
+                               id=exp_id)
     wandb_logger.watch(model)
-    trainer = pl.Trainer.from_argparse_args(
-        args, logger=wandb_logger)  #, callbacks=[WandbImageCallback(val_dataloader)])
+    checkpoint_callback = ModelCheckpoint(
+        save_top_k=1,
+        verbose=True,
+        monitor="train/generator_loss",
+        mode="min",
+        filename="model-epoch{epoch:02d}-generator_loss{train/generator_loss:.2f}",
+        auto_insert_metric_name=False,
+        dirpath="/home/aahan/KAGGLE_EXPERIMENTS/{}_{}_{}_noAug".format(args.gen, args.l, args.k),
+    )
+    trainer = pl.Trainer.from_argparse_args(args,
+                                            logger=wandb_logger,
+                                            callbacks=[checkpoint_callback])
 
     trainer.fit(model, train_dataloader=train_dataloader, val_dataloaders=val_dataloader)
 
@@ -75,6 +98,7 @@ if __name__ == '__main__':
     parser.add_argument("--gen", required=True, type=str)
     parser.add_argument("--l", required=True, type=int)
     parser.add_argument("--k", required=True, type=int)
+    parser.add_argument("--id", required=False, type=str, default=None)
     parser = pl.Trainer.add_argparse_args(parent_parser=parser)
     args = parser.parse_args()
     main(args)
