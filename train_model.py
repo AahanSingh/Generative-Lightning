@@ -70,7 +70,7 @@ def main(args):
     if not exp_id:
         exp_id = wandb.util.generate_id()
     wandb_logger = WandbLogger(project="Monet CycleGAN",
-                               log_model="all",
+                               log_model=True,
                                save_dir="/home/aahan/KAGGLE_EXPERIMENTS/",
                                name="{}_{}_{}_noAug".format(args.gen, args.l, args.k),
                                id=exp_id)
