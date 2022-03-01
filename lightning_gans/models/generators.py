@@ -10,7 +10,7 @@ from .resnet import WideResnetEncoder, WideResnetDecoder, conv_downsample, conv_
 
 class UNETGenerator(nn.Module):
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         super().__init__()
         self.down_stack = nn.ModuleList([
             downsample(in_channels=3, out_channels=64, kernel_size=2, apply_instancenorm=False),
@@ -39,14 +39,12 @@ class UNETGenerator(nn.Module):
         x = input
         skips = []
         for down in self.down_stack:
-            print(x.shape)
             x = down(x)
             skips.append(x)
         skips = reversed(skips[:-1])
         # Upsampling and establishing the skip connections
         for up, skip in zip(self.up_stack, skips):
             x = up(x)
-            print(x.shape, skip.shape)
             x = torch.cat((x, skip), dim=1)
         x = self.last(x)
         return x
@@ -102,7 +100,7 @@ class WideResnetUNET(torch.nn.Module):
                                   res_channels=f,
                                   kernel_size=3)
             f *= 2
-            downsample = conv_downsample(ks=3, st=2, in_c=in_ch, out_c=f, activation="relu")
+            downsample = conv_downsample(ks=3, st=2, in_c=in_ch, out_c=f, activation="leaky_relu")
             layers.append(torch.nn.Sequential(layer, downsample))
             in_ch = f
             self.downsample_filters.append(f)
@@ -124,7 +122,7 @@ class WideResnetUNET(torch.nn.Module):
                                        st=2,
                                        in_c=in_ch,
                                        out_c=self.downsample_filters[i],
-                                       activation="relu")
+                                       activation="leaky_relu")
             layers.append(torch.nn.Sequential(layer, upsampling))
 
         return torch.nn.ModuleList(layers)
