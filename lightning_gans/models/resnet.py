@@ -1,6 +1,10 @@
 import torch
 
-activations = {"relu": torch.nn.ReLU(inplace=True), "tanh": torch.nn.Tanh()}
+activations = {
+    "leaky_relu": torch.nn.LeakyReLU(inplace=True),
+    "relu": torch.nn.ReLU(inplace=True),
+    "tanh": torch.nn.Tanh()
+}
 
 
 def conv_downsample(ks, st, in_c, out_c, activation=None):
@@ -28,14 +32,13 @@ def wide_block(in_channels, res_channels, l, k, kernel_size):
     layers = []
     for _ in range(l - 1):
         layers.append(
-            conv_downsample(ks=kernel_size, st=1, in_c=prev_out_channels, out_c=res_channels * k))
+            conv_downsample(ks=kernel_size,
+                            st=1,
+                            in_c=prev_out_channels,
+                            out_c=res_channels * k,
+                            activation="leaky_relu"))
         prev_out_channels = res_channels * k
-    layers.append(
-        conv_downsample(ks=kernel_size,
-                        st=1,
-                        in_c=prev_out_channels,
-                        out_c=in_channels,
-                        activation=False))
+    layers.append(conv_downsample(ks=kernel_size, st=1, in_c=prev_out_channels, out_c=in_channels))
     layers = torch.nn.Sequential(*layers)
     return layers
 
@@ -49,11 +52,11 @@ class ResidualLayer(torch.nn.Module):
                                      l=l,
                                      k=k,
                                      kernel_size=kernel_size)
-        self.relu = torch.nn.ReLU(inplace=True)
+        self.relu = torch.nn.LeakyReLU(inplace=True)
 
     def forward(self, x):
         x_out = self.wide_block(x)
-        x_out += x
+        x_out.add_(x)
         x_out = self.relu(x_out)
         return x_out
 
@@ -75,7 +78,7 @@ class WideResnetEncoder(torch.nn.Module):
                                                   st=2,
                                                   in_c=input_channels,
                                                   out_c=input_channels * 2,
-                                                  activation="relu")
+                                                  activation="leaky_relu")
             self.layers.append(layer)
             self.layers.append(dimension_reduction)
             input_channels *= 2
@@ -85,7 +88,7 @@ class WideResnetEncoder(torch.nn.Module):
         self.layers = torch.nn.ModuleList(self.layers)
 
     def forward(self, x):
-        for i, l in enumerate(self.layers):
+        for _, l in enumerate(self.layers):
             x = l(x)
         return x
 
@@ -109,7 +112,7 @@ class WideResnetDecoder(torch.nn.Module):
                                        st=2,
                                        in_c=input_channels,
                                        out_c=input_channels // 2,
-                                       activation="relu")
+                                       activation="leaky_relu")
             self.layers.append(upsampling)
             input_channels //= 2
             res_channels //= 2
