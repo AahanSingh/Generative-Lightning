@@ -17,17 +17,18 @@ def downsample(in_channels, out_channels, kernel_size, apply_instancenorm=True):
         torch.nn.Sequential: Returns a Sequential layer made up of 
                             a Conv2d, InstanceNorm and LeakyRELU
     """
-    if kernel_size % 2 == 0:
-        kernel_size += 1
+    #if kernel_size % 2 == 0:
+    #    kernel_size += 1
     layer = nn.Sequential()
     layer.add_module(
         "Conv",
-        nn.Conv2d(in_channels=in_channels,
-                  out_channels=out_channels,
-                  kernel_size=kernel_size,
-                  stride=2,
-                  padding=kernel_size // 2,
-                  bias=False))
+        nn.Conv2d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=2,
+            padding=0,  #kernel_size // 2,
+            bias=False))
     if apply_instancenorm:
         layer.add_module("InstanceNorm", nn.InstanceNorm2d(num_features=out_channels))
     layer.add_module("LeakyRelu", nn.LeakyReLU())
@@ -47,17 +48,18 @@ def upsample(in_channels, out_channels, kernel_size, apply_dropout=False):
         torch.nn.Sequential: Returns a Sequential layer made up of a 
                             Transposed Conv2d, InstanceNorm, Dropout and RELU
     """
-    if kernel_size % 2 == 0:
-        kernel_size += 1
+    #if kernel_size % 2 == 0:
+    #    kernel_size += 1
     layer = nn.Sequential()
     layer.add_module(
         "Conv",
-        nn.ConvTranspose2d(in_channels=in_channels,
-                           out_channels=out_channels,
-                           kernel_size=kernel_size,
-                           stride=2,
-                           padding=kernel_size // 2,
-                           bias=False))
+        nn.ConvTranspose2d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=2,
+            padding=0,  #kernel_size // 2,
+            bias=False))
     layer.add_module("InstanceNorm", nn.InstanceNorm2d(num_features=out_channels))
     if apply_dropout:
         layer.add_module("Dropout", nn.Dropout2d(p=0.5))

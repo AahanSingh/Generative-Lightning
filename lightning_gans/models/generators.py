@@ -13,14 +13,14 @@ class UNETGenerator(nn.Module):
     def __init__(self):
         super().__init__()
         self.down_stack = nn.ModuleList([
-            downsample(in_channels=3, out_channels=64, kernel_size=3, apply_instancenorm=False),
-            downsample(in_channels=64, out_channels=128, kernel_size=3),
-            downsample(in_channels=128, out_channels=256, kernel_size=3),
-            downsample(in_channels=256, out_channels=512, kernel_size=3),
-            downsample(in_channels=512, out_channels=512, kernel_size=3),
-            downsample(in_channels=512, out_channels=512, kernel_size=3),
-            downsample(in_channels=512, out_channels=512, kernel_size=3),
-            downsample(in_channels=512, out_channels=512, kernel_size=3, apply_instancenorm=False),
+            downsample(in_channels=3, out_channels=64, kernel_size=2, apply_instancenorm=False),
+            downsample(in_channels=64, out_channels=128, kernel_size=2),
+            downsample(in_channels=128, out_channels=256, kernel_size=2),
+            downsample(in_channels=256, out_channels=512, kernel_size=2),
+            downsample(in_channels=512, out_channels=512, kernel_size=2),
+            downsample(in_channels=512, out_channels=512, kernel_size=2),
+            downsample(in_channels=512, out_channels=512, kernel_size=2),
+            downsample(in_channels=512, out_channels=512, kernel_size=2, apply_instancenorm=False),
         ])
         self.up_stack = nn.ModuleList([
             upsample(in_channels=512, out_channels=512, kernel_size=2, apply_dropout=True),
