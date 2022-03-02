@@ -7,21 +7,26 @@ activations = {
 }
 
 
-def conv_downsample(ks, st, in_c, out_c, activation=None):
+def conv_downsample(ks, st, in_c, out_c, activation="leaky_relu", apply_bn=True):
     layers = [
-        torch.nn.Conv2d(in_c, out_c, ks, st, padding=ks // 2),
+        torch.nn.Conv2d(in_c, out_c, ks, st, padding=ks // 2, bias=False),
         torch.nn.BatchNorm2d(num_features=out_c)
     ]
+    if not apply_bn:
+        layers.pop(1)
     if activation:
         layers.append(activations[activation])
     return torch.nn.Sequential(*layers)
 
 
-def conv_upsample(ks, st, in_c, out_c, activation=None):
+def conv_upsample(ks, st, in_c, out_c, activation="leaky_relu", apply_bn=True):
     layers = [
-        torch.nn.ConvTranspose2d(in_c, out_c, ks, st, padding=ks // 2, output_padding=1),
+        torch.nn.ConvTranspose2d(in_c, out_c, ks, st, padding=ks // 2, output_padding=1,
+                                 bias=False),
         torch.nn.BatchNorm2d(num_features=out_c),
     ]
+    if not apply_bn:
+        layers.pop(1)
     if activation:
         layers.append(activations[activation])
     return torch.nn.Sequential(*layers)
@@ -38,7 +43,12 @@ def wide_block(in_channels, res_channels, l, k, kernel_size):
                             out_c=res_channels * k,
                             activation="leaky_relu"))
         prev_out_channels = res_channels * k
-    layers.append(conv_downsample(ks=kernel_size, st=1, in_c=prev_out_channels, out_c=in_channels))
+    layers.append(
+        conv_downsample(ks=kernel_size,
+                        st=1,
+                        in_c=prev_out_channels,
+                        out_c=in_channels,
+                        activation=None))
     layers = torch.nn.Sequential(*layers)
     return layers
 
