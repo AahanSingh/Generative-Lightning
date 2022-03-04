@@ -9,7 +9,9 @@ norms = {"batch": torch.nn.BatchNorm2d, "instance": torch.nn.InstanceNorm2d}
 
 
 def conv_downsample(ks, st, in_c, out_c, activation="leaky_relu", norm="batch", dropout=False):
-    layers = [torch.nn.Conv2d(in_c, out_c, ks, st, padding=ks // 2, bias=False)]
+    layers = [
+        torch.nn.Conv2d(in_c, out_c, ks, st, padding=ks // 2, bias=False, padding_mode="reflect")
+    ]
     if norm:
         layers.append(norms[norm](num_features=out_c))
     if dropout:
