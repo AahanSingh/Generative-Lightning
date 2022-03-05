@@ -5,8 +5,6 @@ import itertools
 import glob
 import random
 from torch.utils.data import Dataset
-
-import torchvision
 import cv2
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
@@ -28,7 +26,7 @@ class MonetDataset(Dataset):
             A.Normalize(mean=0, std=1, max_pixel_value=255),
             ToTensorV2(),
         ])
-        if not transforms:
+        if transforms is not None:
             self.transforms = transforms
         self.aligned_images = None
         if complete_dataset:
