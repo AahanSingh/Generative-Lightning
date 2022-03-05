@@ -1,0 +1,19 @@
+savedir: "/home/aahan/KAGGLE_EXPERIMENTS/"
+experiment_name: "MonetGenerator"
+run_name: "300Data/CustomUNET/Upsample_Conv_1x1/HFlip/"
+id: null
+data_path: "/home/aahan/git_repos/gan/data/raw/"
+
+batch_size: 4
+augmentations: ["horizontalflip"]
+dataset:
+  complete: False
+  shuffle: False
+  
+ckpt_path: null
+generator: "CustomUNET"
+l: 2
+k: 1
+
+epochs: 100 
+accumulate_grad_batches: 32
