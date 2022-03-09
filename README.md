@@ -61,4 +61,8 @@ The first set of experiments are inspired by [Amy Jang's Notebook](https://www.k
 ## Instructions:
 - To run training: `python train_model.py --gpus 1 --data-path data/raw/ --bs 128 --log_every_n_steps 10`
 
+## Need to fix:
+- [] WideResnetEncoder and Decoder don't work. Need to change function signatures of conv_upsample and downsample to new ones.
+- [] WideResnetUnet code needs cleaning.
+
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
