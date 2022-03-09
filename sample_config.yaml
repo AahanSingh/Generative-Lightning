@@ -1,19 +1,19 @@
-savedir: "/home/aahan/KAGGLE_EXPERIMENTS/"
-experiment_name: "MonetGenerator"
-run_name: "300Data/CustomUNET/Upsample_Conv_1x1/HFlip/"
-id: null
-data_path: "/home/aahan/git_repos/gan/data/raw/"
+savedir: <PATH WHERE THE EXPERIMENTS WILL BE SAVED>
+experiment_name: <EXPERIMENT NAME>
+run_name: <NAME OF THIS RUN OF THE EXPERIMENT>
+id: null # <SET TO THE CORRESPONDING WANDB RUN ID TO RESUME TRAINING. DEFAULT IS NULL AND WILL CREATE A NEW WANDB RUN>
+data_path: <PATH TO THE DATA/RAW FOLDER>
 
-batch_size: 4
-augmentations: ["horizontalflip"]
+batch_size: <BATCH SIZE>
+augmentations: <A LIST OF AUGMENTATIONS. TO VIEW COMPLETE LIST, VIEW THE augmentations DICT IN THE TRAIN SCRIPT>
 dataset:
-  complete: False
-  shuffle: False
+  complete: <SET TO TRUE IF YOU'D LIKE TO USE ALL 7038 PHOTOS>
+  shuffle: <SET TO TRUE TO SHUFFLE DATASET BEFORE TRAINING BEGINS>
   
-ckpt_path: null
-generator: "CustomUNET"
-l: 2
-k: 1
+ckpt_path: null #<ADD PATH TO EXISTING CHECKPOINT TO RESUME TRAINING. DEFAULT IS NONE>
+generator: <GENERATOR TO USE. VIEW generators DICT IN TRAINING SCRIPT>
+l: <DEPTH FACTOR FOR WIDE RESNETS. USED ONLY FOR WIDERESNET GENERATOR>
+k: <WIDTH FACTOR FOR WIDE RESNETS. USED ONLY FOR WIDERESNET GENERATOR>
 
-epochs: 100 
-accumulate_grad_batches: 32
+epochs: <NUMBER OF EPOCHS TO TRAIN FOR>
+accumulate_grad_batches: <SIMULATES LARGER BATCH SIZES. FOR DOCUMENTATION LOOK AT CORRESPONDING PYTORCH LIGHTINING PAGE>
