@@ -65,4 +65,10 @@ The first set of experiments are inspired by [Amy Jang's Notebook](https://www.k
 - [ ] WideResnetEncoder and Decoder don't work. Need to change function signatures of conv_upsample and downsample to new ones.
 - [ ] WideResnetUnet code needs cleaning.
 
+## Future features:
+- [ ] ClearML Support
+- [ ] Timm Support
+- [ ] DCGAN Support
+- [ ] Pix2Pix support
+
 <p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
