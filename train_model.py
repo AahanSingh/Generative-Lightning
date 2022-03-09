@@ -24,6 +24,12 @@ augmentations = {
     "horizontalflip": A.HorizontalFlip(p=0.5),
     "randomcrop": A.RandomResizedCrop(height=256, width=256, p=0.5),
 }
+generators = {
+    "UNET": UNETGenerator,
+    "Resnet": WideResnetEncoderDecoder,
+    "WideResnetUNET": WideResnetUNET,
+    "CustomUNET": CustomUNET,
+}
 
 
 def main(args):
@@ -78,12 +84,7 @@ def main(args):
                                                    batch_size=batch_size,
                                                    num_workers=workers)
     # Create the generator
-    generators = {
-        "UNET": UNETGenerator,
-        "Resnet": WideResnetEncoderDecoder,
-        "WideResnetUNET": WideResnetUNET,
-        "CustomUNET": CustomUNET,
-    }
+
     model = CycleGAN(generator=generators[config.generator],
                      discriminator=Discriminator,
                      l=config.l,
