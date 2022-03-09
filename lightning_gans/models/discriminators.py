@@ -6,7 +6,7 @@ from .utils import downsample
 
 class Discriminator(nn.Module):
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         super().__init__()
         self.layers = nn.Sequential(
             downsample(in_channels=3, out_channels=64, kernel_size=2, apply_instancenorm=False),
