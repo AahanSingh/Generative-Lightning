@@ -107,7 +107,11 @@ def main(args):
         mode="min",
         filename="model-monet_generator_loss{train/monet_gen_loss:.2f}",
         auto_insert_metric_name=False,
-        dirpath="/home/aahan/KAGGLE_EXPERIMENTS/{}/models".format(config.experiment_name),
+        dirpath="{}/{}/{}/models/".format(
+            config.savedir,
+            config.experiment_name,
+            config.run_name,
+        ),
         every_n_train_steps=1)
     trainer = pl.Trainer.from_argparse_args(
         args,
