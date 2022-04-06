@@ -3,7 +3,8 @@ import torch
 activations = {
     "leaky_relu": torch.nn.LeakyReLU(inplace=True),
     "relu": torch.nn.ReLU(inplace=True),
-    "tanh": torch.nn.Tanh()
+    "tanh": torch.nn.Tanh(),
+    "sigmoid": torch.nn.Sigmoid(),
 }
 norms = {"batch": torch.nn.BatchNorm2d, "instance": torch.nn.InstanceNorm2d}
 
@@ -21,22 +22,31 @@ def conv_downsample(ks, st, in_c, out_c, activation="leaky_relu", norm="batch", 
     return torch.nn.Sequential(*layers)
 
 
-def conv_upsample(ks, st, in_c, out_c, activation="leaky_relu", norm="batch", dropout=False):
+def conv_upsample(ks,
+                  st,
+                  in_c,
+                  out_c,
+                  activation="leaky_relu",
+                  norm="batch",
+                  dropout=False,
+                  upsample_type="conv_transpose"):
     padding = {2: [0, 0], 3: [1, 1], 4: [1, 0], 5: [2, 1]}
     if st == 1:
         padding[4] = [0, 0]
         padding[3] = [1, 0]
-    layers = [
-        torch.nn.ConvTranspose2d(in_c,
-                                 out_c,
-                                 ks,
-                                 st,
-                                 padding=padding[ks][0],
-                                 output_padding=padding[ks][1],
-                                 bias=False),
-        #torch.nn.UpsamplingBilinear2d(scale_factor=2),
-        #torch.nn.Conv2d(in_c, out_c, kernel_size=1, stride=1, bias=False)
-    ]
+    layers = []
+    if upsample_type == "conv_transpose":
+        layers.append(
+            torch.nn.ConvTranspose2d(in_c,
+                                     out_c,
+                                     ks,
+                                     st,
+                                     padding=padding[ks][0],
+                                     output_padding=padding[ks][1],
+                                     bias=False))
+    elif upsample_type == "upsample_conv":
+        layers.append(torch.nn.UpsamplingBilinear2d(scale_factor=2),
+                      torch.nn.Conv2d(in_c, out_c, kernel_size=1, stride=1, bias=False))
     if norm:
         layers.append(norms[norm](num_features=out_c, affine=True))
     if dropout:
@@ -96,8 +106,9 @@ class WideResnetEncoder(torch.nn.Module):
             layer = ResidualLayer(l=l,
                                   k=k,
                                   in_channels=input_channels,
-                                  res_channels=res_channels,
-                                  kernel_size=ks)
+                                  kernel_size=ks,
+                                  activation="leaky_relu",
+                                  norm="batch")
             dimension_reduction = conv_downsample(ks=ks,
                                                   st=2,
                                                   in_c=input_channels,
@@ -129,8 +140,9 @@ class WideResnetDecoder(torch.nn.Module):
             layer = ResidualLayer(l=l,
                                   k=k,
                                   in_channels=input_channels,
-                                  res_channels=res_channels,
-                                  kernel_size=ks)
+                                  kernel_size=ks,
+                                  activation="leaky_relu",
+                                  norm="batch")
             self.layers.append(layer)
             upsampling = conv_upsample(ks=ks,
                                        st=2,
