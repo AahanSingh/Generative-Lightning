@@ -13,7 +13,7 @@ def conv_downsample(ks, st, in_c, out_c, activation="leaky_relu", norm="batch", 
         torch.nn.Conv2d(in_c, out_c, ks, st, padding=ks // 2, bias=False, padding_mode="reflect")
     ]
     if norm:
-        layers.append(norms[norm](num_features=out_c))
+        layers.append(norms[norm](num_features=out_c, affine=True))
     if dropout:
         layers.append(torch.nn.Dropout2d(p=0.5, inplace=True))
     if activation:
@@ -22,13 +22,23 @@ def conv_downsample(ks, st, in_c, out_c, activation="leaky_relu", norm="batch", 
 
 
 def conv_upsample(ks, st, in_c, out_c, activation="leaky_relu", norm="batch", dropout=False):
+    padding = {2: [0, 0], 3: [1, 1], 4: [1, 0], 5: [2, 1]}
+    if st == 1:
+        padding[4] = [0, 0]
+        padding[3] = [1, 0]
     layers = [
-        #torch.nn.ConvTranspose2d(in_c, out_c, ks, st, padding=ks // 2, output_padding=1,bias=False),
-        torch.nn.UpsamplingBilinear2d(scale_factor=2),
-        torch.nn.Conv2d(in_c, out_c, kernel_size=1, stride=1, bias=False)
+        torch.nn.ConvTranspose2d(in_c,
+                                 out_c,
+                                 ks,
+                                 st,
+                                 padding=padding[ks][0],
+                                 output_padding=padding[ks][1],
+                                 bias=False),
+        #torch.nn.UpsamplingBilinear2d(scale_factor=2),
+        #torch.nn.Conv2d(in_c, out_c, kernel_size=1, stride=1, bias=False)
     ]
     if norm:
-        layers.append(norms[norm](num_features=out_c))
+        layers.append(norms[norm](num_features=out_c, affine=True))
     if dropout:
         layers.append(torch.nn.Dropout2d(p=0.5, inplace=True))
     if activation:

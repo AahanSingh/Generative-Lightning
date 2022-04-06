@@ -48,3 +48,32 @@ class MonetDataset(Dataset):
 
     def __len__(self):
         return len(self.aligned_images)
+
+
+class AbstractArtDataset(Dataset):
+    """Pytorch Dataset Subclass for the Monet Dataset
+    """
+
+    def __init__(self, dataroot, transforms=None, size=(256, 256)):
+        super().__init__()
+        self.images = glob.glob(dataroot + "/*.jpg")
+        self.transforms = A.Compose([
+            A.RandomCrop(*size),
+            A.Normalize(mean=0, std=1, max_pixel_value=255),
+            ToTensorV2(),
+        ])
+        if transforms is not None:
+            self.transforms = transforms
+
+    def _read_image(self, path):
+        image = cv2.imread(path)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        return image
+
+    def __getitem__(self, idx):
+        image = self._read_image(self.images[idx])
+        monet = self.transforms(image=image)["image"].float()
+        return monet, 1
+
+    def __len__(self):
+        return len(self.images)

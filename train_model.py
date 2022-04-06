@@ -14,11 +14,11 @@ from pytorch_lightning.loggers import WandbLogger
 import wandb
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
-from lightning_gans.models.discriminators import Discriminator
+from generative_lightning.models.discriminators import Discriminator
 
-from lightning_gans.models.generators import UNETGenerator, WideResnetEncoderDecoder, WideResnetUNET, CustomUNET
-from lightning_gans.models.cycle_gan import CycleGAN
-from lightning_gans.data.dataloader import MonetDataset
+from generative_lightning.models.generators import UNETGenerator, WideResnetEncoderDecoder, WideResnetUNET, CustomUNET
+from generative_lightning.models.cycle_gan import CycleGAN
+from generative_lightning.data.dataloader import MonetDataset
 
 augmentations = {
     "horizontalflip": A.HorizontalFlip(p=0.5),

@@ -2,9 +2,9 @@ import os
 from argparse import ArgumentParser
 import torch
 import torch.utils.data
-from lightning_gans.models.generators import UNETGenerator, WideResnetEncoderDecoder, WideResnetUNET, CustomUNET
-from lightning_gans.models.cycle_gan import CycleGAN
-from lightning_gans.data.dataloader import MonetDataset
+from generative_lightning.models.generators import UNETGenerator, WideResnetEncoderDecoder, WideResnetUNET, CustomUNET
+from generative_lightning.models.cycle_gan import CycleGAN
+from generative_lightning.data.dataloader import MonetDataset
 import numpy as np
 import PIL
 import tqdm

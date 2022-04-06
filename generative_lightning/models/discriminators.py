@@ -14,7 +14,7 @@ class Discriminator(nn.Module):
             downsample(in_channels=128, out_channels=256, kernel_size=2, apply_instancenorm=False),
             nn.ZeroPad2d(1),
             nn.Conv2d(in_channels=256, out_channels=512, kernel_size=4, stride=1, bias=False),
-            nn.InstanceNorm2d(num_features=512), nn.LeakyReLU(), nn.ZeroPad2d(1),
+            nn.InstanceNorm2d(num_features=512, affine=True), nn.LeakyReLU(), nn.ZeroPad2d(1),
             nn.Conv2d(in_channels=512, out_channels=1, kernel_size=4, stride=1))
 
     def forward(self, input):
